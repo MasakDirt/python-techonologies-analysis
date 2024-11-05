@@ -38,7 +38,8 @@ class DouSpider(scrapy.Spider):
                 }
             )
 
-    def _load_all_vacancies(self, url: str) -> str:
+    @classmethod
+    def _load_all_vacancies(cls, url: str) -> str:
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-dev-shm-usage")
@@ -103,12 +104,14 @@ class DouSpider(scrapy.Spider):
             "technologies": ", ".join(self._parse_technologies(description)),
         }
 
-    def _parse_ukr_date(self, publish_date_str: str) -> date:
+    @classmethod
+    def _parse_ukr_date(cls, publish_date_str: str) -> date:
         day, month = publish_date_str.split()
         month_num = MONTHS_UA[month]
         return date(date.today().year, month_num, int(day))
 
-    def _parse_experience(self, description: str) -> int | None:
+    @classmethod
+    def _parse_experience(cls, description: str) -> int | None:
         pattern = (
             r"(\d+)\+?\s*(?:роки досвіду|років досвіду|"
             r"years of experience|years of)"
@@ -123,7 +126,8 @@ class DouSpider(scrapy.Spider):
 
         return None
 
-    def _parse_technologies(self, description: str) -> list[str]:
+    @classmethod
+    def _parse_technologies(cls, description: str) -> list[str]:
         return [
             tech for tech in TECHNOLOGIES if
             re.search(rf"\b{tech}\b", description, re.IGNORECASE)
