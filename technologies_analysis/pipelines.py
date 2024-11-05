@@ -23,6 +23,7 @@ class TechnologiesAnalysisPipeline:
             CREATE TABLE {TABLE_NAME} (
                 title TEXT,
                 publish_date DATE,
+                experience INT,
                 company TEXT,
                 company_description TEXT,
                 place TEXT,
@@ -38,10 +39,11 @@ class TechnologiesAnalysisPipeline:
 
     def process_item(self, item, spider):
         self.conn.execute(
-            f"INSERT INTO {TABLE_NAME} VALUES (?, ?, ?, ?, ?, ?, ?)",
+            f"INSERT INTO {TABLE_NAME} VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 item["title"],
                 item["publish_date"],
+                item["experience"],
                 item["company"],
                 item["company_description"],
                 item["place"],
