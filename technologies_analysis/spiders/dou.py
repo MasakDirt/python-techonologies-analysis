@@ -38,11 +38,6 @@ class DouSpider(scrapy.Spider):
                 }
             )
 
-    def _parse_ukr_date(self, publish_date_str: str) -> date:
-        day, month = publish_date_str.split()
-        month_num = MONTHS_UA[month]
-        return date(date.today().year, month_num, int(day))
-
     def _load_all_vacancies(self, url: str) -> str:
         chrome_options = Options()
         chrome_options.add_argument("--headless")
@@ -94,10 +89,6 @@ class DouSpider(scrapy.Spider):
             r"\$(\d+).*?–?\s*(\d+)?"
         )
         description = response.css(".vacancy-section").get()
-        technologies_found = [
-            tech for tech in TECHNOLOGIES if
-            re.search(rf"\b{tech}\b", description, re.IGNORECASE)
-        ]
 
         yield {
             "title": response.meta["title"],
@@ -106,7 +97,34 @@ class DouSpider(scrapy.Spider):
             "company_description": response.css(
                 ".l-t::text"
             ).get().replace("\xa0", "").strip(),
+            "experience": self._parse_experience(description),
             "place": response.css(".sh-info .place::text").get(),
             "salary": int(salary) if salary else salary,
-            "technologies": ", ".join(technologies_found),
+            "technologies": ", ".join(self._parse_technologies(description)),
         }
+
+    def _parse_ukr_date(self, publish_date_str: str) -> date:
+        day, month = publish_date_str.split()
+        month_num = MONTHS_UA[month]
+        return date(date.today().year, month_num, int(day))
+
+    def _parse_experience(self, description: str) -> int | None:
+        pattern = (
+            r"(\d+)\+?\s*(?:роки досвіду|років досвіду|"
+            r"years of experience|years of)"
+        )
+        matches = re.findall(pattern, description, re.IGNORECASE)
+
+        if matches:
+            years_of_experience = max(
+                int(match) for match in matches if int(match) < 15
+            )
+            return years_of_experience
+
+        return None
+
+    def _parse_technologies(self, description: str) -> list[str]:
+        return [
+            tech for tech in TECHNOLOGIES if
+            re.search(rf"\b{tech}\b", description, re.IGNORECASE)
+        ]
